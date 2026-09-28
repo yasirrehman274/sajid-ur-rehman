@@ -1,26 +1,241 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ *
+ * Design tokens
+ * ------------------------------------------------------------------ */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --surface: #f7f9fc;
+  --surface-strong: #eef3f9;
+  --foreground: #0b1524;
+  --muted: #4c5b6f;
+  --subtle: #6b7a8d;
+  --border: #e2e8f0;
+  --border-strong: #cfd9e6;
+  --accent: #0f4c81;
+  --accent-deep: #0a3760;
+  --accent-soft: #e7f0f9;
+  --teal: #0e7490;
+  --ring: #0f4c81;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-border-base: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-soft: var(--accent-soft);
+  --color-teal: var(--teal);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ------------------------------------------------------------------ *
+ * Base
+ * ------------------------------------------------------------------ */
+html {
+  scroll-behavior: smooth;
+  /* Sticky header height + breathing room for in-page anchors. */
+  scroll-padding-top: 6.5rem;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+/* Consistent, visible focus treatment for keyboard users. */
+:where(a, button, summary, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Prevent long scientific formulae and titles from forcing horizontal scroll. */
+h1,
+h2,
+h3,
+h4,
+p,
+li,
+dd,
+dt,
+figcaption {
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+}
+
+/* ------------------------------------------------------------------ *
+ * Layout primitives
+ * ------------------------------------------------------------------ */
+@utility container-page {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: 1.25rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 2rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
+@utility section-y {
+  padding-block: 4rem;
+
+  @media (width >= 40rem) {
+    padding-block: 5rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-block: 6.5rem;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Typography helpers
+ * ------------------------------------------------------------------ */
+@utility eyebrow {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+@utility display-title {
+  font-size: clamp(2.25rem, 1.15rem + 4.6vw, 4.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+}
+
+@utility section-title {
+  font-size: clamp(1.625rem, 1.05rem + 2.1vw, 2.625rem);
+  line-height: 1.12;
+  letter-spacing: -0.022em;
+  font-weight: 600;
+}
+
+@utility lede {
+  font-size: clamp(1rem, 0.96rem + 0.3vw, 1.1875rem);
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ *
+ * Surfaces & motion
+ * ------------------------------------------------------------------ */
+@utility card-base {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow:
+    0 1px 2px rgb(11 21 36 / 0.04),
+    0 1px 3px rgb(11 21 36 / 0.03);
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 300ms ease;
+}
+
+@utility rule-grid {
+  background-image:
+    linear-gradient(to right, rgb(15 76 129 / 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(15 76 129 / 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility animate-rise {
+  animation: rise-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-fade {
+  animation: fade-in 900ms ease both;
+}
+
+/* Scroll-reveal: elements start hidden and are revealed when observed. */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 650ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Print — keeps the CV page and publication list printable
+ * ------------------------------------------------------------------ */
+@media print {
+  .no-print {
+    display: none !important;
+  }
 }
