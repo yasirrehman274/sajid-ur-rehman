@@ -1,6 +1,5 @@
 import AwardCard from "@/components/AwardCard";
 import ButtonLink from "@/components/ButtonLink";
-import CtaBand from "@/components/CtaBand";
 import Hero from "@/components/Hero";
 import PublicationCard from "@/components/PublicationCard";
 import ResearchCard from "@/components/ResearchCard";
@@ -189,7 +188,7 @@ export default function Home() {
 
           <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:mt-14 lg:gap-6">
             {featuredAwards.map((award, index) => (
-              <Reveal as="li" key={award.title} delay={index * 70}>
+              <Reveal as="li" key={award.id} delay={index * 70}>
                 <AwardCard award={award} />
               </Reveal>
             ))}
@@ -224,10 +223,7 @@ export default function Home() {
             </Reveal>
           </div>
         </div>
-      </section>
-
-      {/* 7 — Call to action */}
-      <CtaBand />
+</section>
     </>
   );
 }
