@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import AwardCard from "@/components/AwardCard";
 import ButtonLink from "@/components/ButtonLink";
-import CtaBand from "@/components/CtaBand";
 import PageHeader from "@/components/PageHeader";
 import ProfileCard from "@/components/ProfileCard";
 import Reveal from "@/components/Reveal";
@@ -153,7 +152,7 @@ export default function AboutPage() {
 
           <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:mt-14 lg:gap-6">
             {awards.map((award, index) => (
-              <Reveal as="li" key={award.title} delay={index * 60}>
+              <Reveal as="li" key={award.id} delay={index * 60}>
                 <AwardCard award={award} />
               </Reveal>
             ))}
@@ -236,8 +235,6 @@ export default function AboutPage() {
           </Reveal>
         </div>
       </section>
-
-      <CtaBand />
     </>
   );
 }

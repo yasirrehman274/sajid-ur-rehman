@@ -202,7 +202,7 @@ export default function CvPage() {
               </h3>
               <ul className="mt-5 flex flex-col gap-3.5">
                 {awards.map((award) => (
-                  <li key={award.title} className="border-l-2 border-accent/20 pl-4">
+                  <li key={award.id} className="border-l-2 border-accent/20 pl-4">
                     <p className="text-pretty text-[0.9375rem] font-medium text-foreground">
                       {award.title}
                     </p>

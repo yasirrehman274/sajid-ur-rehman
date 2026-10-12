@@ -2,172 +2,155 @@
 
 import { useMemo, useState } from "react";
 
+import BookChapterCard from "@/components/BookChapterCard";
 import PublicationCard from "@/components/PublicationCard";
-import type { Publication } from "@/types";
+import Reveal from "@/components/Reveal";
+import SectionHeading from "@/components/SectionHeading";
+import type { BookChapter, Publication } from "@/types";
 
 type PublicationExplorerProps = {
   publications: Publication[];
+  bookChapters: BookChapter[];
   years: number[];
 };
 
+type YearGroup<T> = [year: number, items: T[]];
+
+/** Buckets items by year, newest first. */
+function groupByYear<T extends { year: number }>(items: T[]): YearGroup<T>[] {
+  const map = new Map<number, T[]>();
+  for (const item of items) {
+    const bucket = map.get(item.year);
+    if (bucket) bucket.push(item);
+    else map.set(item.year, [item]);
+  }
+  return [...map.entries()].sort((a, b) => b[0] - a[0]);
+}
+
 /**
- * Year filter plus free-text search over the publication list.
+ * Year filter over the publication archive.
  *
- * All filtering happens on the client against data that is already serialised
- * into the page, so the route itself stays a statically prerendered Server
- * Component.
+ * Journal articles and book chapters are filtered independently by the same
+ * selected year, so the two lists always stay in sync: a year can show
+ * articles, chapters, both, or neither. Each list is grouped by year straight
+ * from the data — no per-year branching — so adding a new article or chapter
+ * is enough to make it appear.
+ *
+ * All work happens on the client against data already serialised into the
+ * page, so /publications stays a statically prerendered Server Component.
  */
-export default function PublicationExplorer({ publications, years }: PublicationExplorerProps) {
-  const [year, setYear] = useState<number | "all">("all");
-  const [query, setQuery] = useState("");
+export default function PublicationExplorer({
+  publications,
+  bookChapters,
+  years,
+}: PublicationExplorerProps) {
+  const [selectedYear, setSelectedYear] = useState<number | "all">("all");
 
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
+  const isAll = selectedYear === "all";
 
-    return publications.filter((publication) => {
-      if (year !== "all" && publication.year !== year) return false;
-      if (!needle) return true;
-      return (
-        publication.title.toLowerCase().includes(needle) ||
-        publication.authors.toLowerCase().includes(needle) ||
-        publication.journal.toLowerCase().includes(needle)
-      );
-    });
-  }, [publications, year, query]);
+  const articleGroups = useMemo(
+    () =>
+      groupByYear(
+        publications.filter(
+          (publication) => isAll || publication.year === selectedYear,
+        ),
+      ),
+    [publications, isAll, selectedYear],
+  );
 
-  const grouped = useMemo(() => {
-    const map = new Map<number, Publication[]>();
-    for (const publication of filtered) {
-      const bucket = map.get(publication.year);
-      if (bucket) bucket.push(publication);
-      else map.set(publication.year, [publication]);
-    }
-    return [...map.entries()].sort((a, b) => b[0] - a[0]);
-  }, [filtered]);
+  const chapterGroups = useMemo(
+    () =>
+      groupByYear(
+        bookChapters.filter((chapter) => isAll || chapter.year === selectedYear),
+      ),
+    [bookChapters, isAll, selectedYear],
+  );
 
-  const hasFilters = year !== "all" || query.trim().length > 0;
+  const articleCount = articleGroups.reduce((total, [, items]) => total + items.length, 0);
+  const chapterCount = chapterGroups.reduce((total, [, items]) => total + items.length, 0);
 
   return (
     <div>
-      {/* Controls */}
+      {/* Year filter */}
       <div className="card-base p-5 sm:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          {/* Year filter */}
-          <div className="min-w-0">
-            <p
-              id="year-filter-label"
-              className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-subtle"
+        <p
+          id="year-filter-label"
+          className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-subtle"
+        >
+          Filter by year
+        </p>
+        <div
+          role="group"
+          aria-labelledby="year-filter-label"
+          className="mt-3 flex flex-wrap gap-2"
+        >
+          <button
+            type="button"
+            onClick={() => setSelectedYear("all")}
+            aria-pressed={isAll}
+            className={[
+              "rounded-full border px-3.5 py-1.5 text-[0.8125rem] font-medium transition-colors",
+              isAll
+                ? "border-accent bg-accent text-white"
+                : "border-border-base bg-white text-muted hover:border-accent hover:text-accent",
+            ].join(" ")}
+          >
+            All
+          </button>
+          {years.map((year) => (
+            <button
+              key={year}
+              type="button"
+              onClick={() => setSelectedYear(year)}
+              aria-pressed={selectedYear === year}
+              className={[
+                "rounded-full border px-3.5 py-1.5 font-mono text-[0.8125rem] font-medium tabular-nums transition-colors",
+                selectedYear === year
+                  ? "border-accent bg-accent text-white"
+                  : "border-border-base bg-white text-muted hover:border-accent hover:text-accent",
+              ].join(" ")}
             >
-              Filter by year
-            </p>
-            <div
-              role="group"
-              aria-labelledby="year-filter-label"
-              className="mt-3 flex flex-wrap gap-2"
-            >
-              <button
-                type="button"
-                onClick={() => setYear("all")}
-                aria-pressed={year === "all"}
-                className={[
-                  "rounded-full border px-3.5 py-1.5 text-[0.8125rem] font-medium transition-colors",
-                  year === "all"
-                    ? "border-accent bg-accent text-white"
-                    : "border-border-base bg-white text-muted hover:border-accent hover:text-accent",
-                ].join(" ")}
-              >
-                All
-              </button>
-              {years.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setYear(option)}
-                  aria-pressed={year === option}
-                  className={[
-                    "rounded-full border px-3.5 py-1.5 font-mono text-[0.8125rem] font-medium tabular-nums transition-colors",
-                    year === option
-                      ? "border-accent bg-accent text-white"
-                      : "border-border-base bg-white text-muted hover:border-accent hover:text-accent",
-                  ].join(" ")}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="w-full lg:max-w-xs">
-            <label
-              htmlFor="publication-search"
-              className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-subtle"
-            >
-              Search
-            </label>
-            <div className="relative mt-3">
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 20 20"
-                className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-              >
-                <circle cx="9" cy="9" r="5.5" />
-                <path d="m13.5 13.5 3 3" strokeLinecap="round" />
-              </svg>
-              <input
-                id="publication-search"
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Title, author or journal"
-                className="w-full rounded-full border border-border-base bg-white py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-subtle focus:border-accent focus:outline-none"
-              />
-            </div>
-          </div>
+              {year}
+            </button>
+          ))}
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border-base pt-4">
           <p aria-live="polite" className="text-[0.8125rem] text-muted">
-            Showing <span className="font-medium text-foreground">{filtered.length}</span> of{" "}
+            Showing <span className="font-medium text-foreground">{articleCount}</span> of{" "}
             {publications.length} articles
           </p>
-          {hasFilters ? (
+          {!isAll ? (
             <button
               type="button"
-              onClick={() => {
-                setYear("all");
-                setQuery("");
-              }}
+              onClick={() => setSelectedYear("all")}
               className="text-[0.8125rem] font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent"
             >
-              Clear filters
+              Clear filter
             </button>
           ) : null}
         </div>
       </div>
 
-      {/* Results */}
-      {grouped.length === 0 ? (
+      {/* Journal articles, grouped by year */}
+      {articleCount === 0 ? (
         <div className="card-base mt-6 px-6 py-16 text-center">
-          <p className="text-[0.9375rem] font-medium text-foreground">No matching publications</p>
+          <p className="text-[0.9375rem] font-medium text-foreground">No articles for this year</p>
           <p className="mx-auto mt-2 max-w-md text-[0.875rem] leading-relaxed text-muted">
-            No article matches the current year and search combination. Try a different
-            search term or clear the year filter.
+            There are no journal articles recorded for {selectedYear}. Choose another year, or
+            select all to see the full list.
           </p>
         </div>
       ) : (
         <div className="mt-8 flex flex-col gap-12">
-          {grouped.map(([groupYear, items]) => (
-            <section key={groupYear} aria-labelledby={`year-${groupYear}`}>
+          {articleGroups.map(([year, items]) => (
+            <section key={year} aria-labelledby={`year-${year}`}>
               <div className="flex items-baseline gap-4">
                 <h2
-                  id={`year-${groupYear}`}
+                  id={`year-${year}`}
                   className="font-mono text-xl font-medium tabular-nums tracking-tight text-foreground sm:text-2xl"
                 >
-                  {groupYear}
+                  {year}
                 </h2>
                 <span className="h-px flex-1 bg-border-base" aria-hidden="true" />
                 <span className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-subtle">
@@ -186,6 +169,50 @@ export default function PublicationExplorer({ publications, years }: Publication
           ))}
         </div>
       )}
+
+      {/* Book chapters, filtered by the same year. Rendered only when the
+          selected year actually has at least one chapter, so no empty section
+          or placeholder card is ever shown. */}
+      {chapterCount > 0 ? (
+        <section
+          className="mt-16 border-t border-border-base pt-14 sm:mt-20 sm:pt-16"
+          aria-labelledby="book-chapters"
+        >
+          <SectionHeading
+            id="book-chapters"
+            eyebrow="Book Chapters"
+            title="Books & chapters"
+            description="Invited and contributed chapters on metal oxide composites, group II–VI chalcogenides, graphitic carbon nitride nanocomposites and spinel oxides for energy conversion."
+          />
+
+          <div className="mt-12 flex flex-col gap-12">
+            {chapterGroups.map(([year, items]) => (
+              <section key={year} aria-labelledby={`chapter-year-${year}`}>
+                <div className="flex items-baseline gap-4">
+                  <h3
+                    id={`chapter-year-${year}`}
+                    className="font-mono text-xl font-medium tabular-nums tracking-tight text-foreground sm:text-2xl"
+                  >
+                    {year}
+                  </h3>
+                  <span className="h-px flex-1 bg-border-base" aria-hidden="true" />
+                  <span className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-subtle">
+                    {items.length} {items.length === 1 ? "chapter" : "chapters"}
+                  </span>
+                </div>
+
+                <ul className="mt-5 grid gap-5 lg:grid-cols-2 lg:gap-6">
+                  {items.map((chapter) => (
+                    <Reveal as="li" key={chapter.title} delay={0}>
+                      <BookChapterCard chapter={chapter} />
+                    </Reveal>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

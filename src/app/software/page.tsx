@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import CtaBand from "@/components/CtaBand";
 import PageHeader from "@/components/PageHeader";
 import Reveal from "@/components/Reveal";
 import SoftwareCard from "@/components/SoftwareCard";
@@ -91,8 +90,6 @@ export default function SoftwarePage() {
           </div>
         </div>
       </section>
-
-      <CtaBand />
     </>
   );
 }

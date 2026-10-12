@@ -438,9 +438,18 @@ export const bookChapters: BookChapter[] = [
   },
 ];
 
-/** Distinct publication years, newest first — used for the year filter. */
+/** Distinct journal-article years, newest first. */
 export const publicationYears: number[] = Array.from(
   new Set(publications.map((publication) => publication.year)),
+).sort((a, b) => b - a);
+
+/**
+ * Every year represented by either a journal article or a book chapter,
+ * newest first. This is the option list for the year filter, so a year is only
+ * offered when there is real content behind it. Nothing is hardcoded.
+ */
+export const publicationFilterYears: number[] = Array.from(
+  new Set([...publicationYears, ...bookChapters.map((chapter) => chapter.year)]),
 ).sort((a, b) => b - a);
 
 /** Total number of distinct journal articles listed in the CV. */
