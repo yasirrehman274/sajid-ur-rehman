@@ -77,8 +77,14 @@ export interface SkillGroup {
   skills: Skill[];
 }
 
-/** An award, scholarship or grant from the CV. */
+/**
+ * An award, scholarship or grant from the CV.
+ *
+ * `id` is required because titles are not unique: the CV lists
+ * "Excellent International Student Award" for both 2019 and 2018.
+ */
 export interface Award {
+  id: string;
   title: string;
   issuer: string;
   year?: string;
@@ -110,18 +116,6 @@ export interface Language {
   language: string;
   proficiency: string;
 }
-
-/** A news / research update entry. */
-export interface NewsItem {
-  id: string;
-  date: string;
-  title: string;
-  summary: string;
-  category: NewsCategory;
-  url?: string;
-}
-
-export type NewsCategory = "Publication" | "Award" | "Grant" | "Announcement";
 
 /** A navigation entry. */
 export interface NavItem {

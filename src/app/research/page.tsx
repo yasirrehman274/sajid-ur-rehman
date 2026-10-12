@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import CtaBand from "@/components/CtaBand";
 import PageHeader from "@/components/PageHeader";
 import ResearchCard from "@/components/ResearchCard";
 import Reveal from "@/components/Reveal";
@@ -73,8 +72,6 @@ export default function ResearchPage() {
           </div>
         </div>
       </section>
-
-      <CtaBand />
     </>
   );
 }
